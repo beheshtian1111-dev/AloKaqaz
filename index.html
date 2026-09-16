@@ -44,9 +44,9 @@
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--maroon);}
   .row2{display:flex;gap:10px;}
   .row2 > div{flex:1;}
-  .style-pick{display:flex;gap:10px;margin-top:6px;}
+  .style-pick{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;}
   .style-pick label{
-    flex:1;text-align:center;border:1.5px solid #e6dcca;border-radius:10px;
+    flex:1 1 calc(50% - 5px);text-align:center;border:1.5px solid #e6dcca;border-radius:10px;
     padding:12px 4px;font-size:14px;font-weight:500;cursor:pointer;margin:0;
   }
   .style-pick input{display:none;}
@@ -123,9 +123,12 @@
     </div>
 
     <label>سبک مورد نظر</label>
+    <label>سبک مورد نظر (می‌تونی چند گزینه انتخاب کنی)</label>
     <div class="style-pick">
-      <label><input type="radio" name="style" value="مدرن" checked><span>مدرن</span></label>
-      <label><input type="radio" name="style" value="کلاسیک"><span>کلاسیک</span></label>
+      <label><input type="checkbox" name="style" value="کلاسیک (طرح گلدار)" checked><span>کلاسیک (طرح گلدار)</span></label>
+      <label><input type="checkbox" name="style" value="مدرن (ساده و پتینه)"><span>مدرن (ساده و پتینه)</span></label>
+      <label><input type="checkbox" name="style" value="طرح کودک"><span>طرح کودک</span></label>
+      <label><input type="checkbox" name="style" value="طرح نوجوان"><span>طرح نوجوان</span></label>
     </div>
 
     <label>روز پیشنهادی برای بازدید</label>
@@ -258,7 +261,7 @@
     const address = document.getElementById('address').value.trim();
     const area = document.getElementById('area').value.trim();
     const rooms = document.getElementById('rooms').value.trim();
-    const style = document.querySelector('input[name="style"]:checked').value;
+    const style = Array.from(document.querySelectorAll('input[name="style"]:checked')).map(el => el.value).join('، ');
     const visitDate = getSelectedJalaliDate();
     const visitTime = document.getElementById('visitTime').value;
     const notes = document.getElementById('notes').value.trim();
