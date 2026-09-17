@@ -166,8 +166,18 @@
     <div class="glass">
       <div class="section-title"><span class="dot"></span>آدرس و مشخصات خانه</div>
 
-      <label>آدرس دقیق <span class="required">*</span></label>
-      <textarea id="address" rows="3" placeholder="شهر، منطقه، خیابان، پلاک..."></textarea>
+      <label>شهر <span class="required">*</span></label>
+      <select id="city">
+        <option value="">انتخاب کنید</option>
+        <option value="تهران">تهران</option>
+        <option value="کرج">کرج</option>
+      </select>
+
+      <label>محله <span class="required">*</span></label>
+      <input type="text" id="region" placeholder="مثلاً: سعادت‌آباد">
+
+      <label>آدرس تکمیلی <span class="required">*</span></label>
+      <textarea id="addressDetail" rows="3" placeholder="خیابان، کوچه، پلاک، واحد..."></textarea>
 
       <div class="row2">
         <div>
@@ -312,7 +322,10 @@
   function submitBooking(){
     const fullname = document.getElementById('fullname').value.trim();
     const phone = document.getElementById('phone').value.trim();
-    const address = document.getElementById('address').value.trim();
+    const city = document.getElementById('city').value;
+    const region = document.getElementById('region').value;
+    const addressDetail = document.getElementById('addressDetail').value.trim();
+    const address = `${city} - ${region} - ${addressDetail}`;
     const area = document.getElementById('area').value.trim();
     const rooms = document.getElementById('rooms').value.trim();
     const style = Array.from(document.querySelectorAll('input[name="style"]:checked')).map(el => el.value).join('، ');
@@ -321,8 +334,8 @@
     const notes = document.getElementById('notes').value.trim();
     const errMsg = document.getElementById('errMsg');
 
-    if(!fullname || !phone || !address){
-      errMsg.textContent = "لطفاً نام، شماره تماس و آدرس رو کامل وارد کن";
+    if(!fullname || !phone || !city || !region || !addressDetail){
+      errMsg.textContent = "لطفاً نام، شماره تماس، شهر، محله و آدرس تکمیلی رو کامل وارد کن";
       errMsg.style.display = "block";
       return;
     }

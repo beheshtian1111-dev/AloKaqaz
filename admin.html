@@ -83,6 +83,13 @@
   }
   .empty{text-align:center;padding:44px 10px;opacity:.6;}
   .count{font-size:13px;color:var(--maroon-dark);opacity:.7;margin-bottom:12px;}
+  .phone-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;margin-bottom:8px;
+  }
+  .phone-row .pname{font-weight:700;color:var(--maroon);font-size:14px;}
+  .phone-row .pnum a{color:var(--maroon-dark);text-decoration:none;font-size:14px;direction:ltr;display:inline-block;}
+  .phone-row .pcount{font-size:11px;color:var(--maroon-dark);opacity:.6;}
 </style>
 </head>
 <body>
@@ -99,14 +106,29 @@
   </div>
 
   <div id="panel">
-    <div class="filters">
-      <button class="active" data-f="همه" onclick="setFilter('همه')">همه</button>
-      <button data-f="در انتظار" onclick="setFilter('در انتظار')">در انتظار</button>
-      <button data-f="تایید شده" onclick="setFilter('تایید شده')">تایید شده</button>
-      <button data-f="انجام شده" onclick="setFilter('انجام شده')">انجام شده</button>
+    <div class="filters" style="margin-bottom:10px;">
+      <button class="active" data-v="requests" onclick="setView('requests')">📋 درخواست‌ها</button>
+      <button data-v="phonebank" onclick="setView('phonebank')">📱 بانک شماره</button>
     </div>
-    <div class="count" id="countBox"></div>
-    <div id="list"></div>
+
+    <div id="requestsView">
+      <div class="filters">
+        <button class="active" data-f="همه" onclick="setFilter('همه')">همه</button>
+        <button data-f="در انتظار" onclick="setFilter('در انتظار')">در انتظار</button>
+        <button data-f="تایید شده" onclick="setFilter('تایید شده')">تایید شده</button>
+        <button data-f="انجام شده" onclick="setFilter('انجام شده')">انجام شده</button>
+      </div>
+      <div class="count" id="countBox"></div>
+      <div id="list"></div>
+    </div>
+
+    <div id="phonebankView" style="display:none;">
+      <div class="glass" style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="count" id="phoneCountBox" style="margin:0;"></div>
+        <button onclick="downloadPhoneCSV()" style="padding:9px 16px;background:linear-gradient(135deg, var(--maroon), var(--maroon-dark));color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 16px rgba(109,6,38,.22);">⬇ دانلود CSV</button>
+      </div>
+      <div id="phoneList"></div>
+    </div>
   </div>
 </div>
 
@@ -143,8 +165,64 @@
 
   function setFilter(f){
     currentFilter = f;
-    document.querySelectorAll('.filters button').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+    document.querySelectorAll('#requestsView .filters button').forEach(b => b.classList.toggle('active', b.dataset.f === f));
     render();
+  }
+
+  function setView(v){
+    document.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+    document.getElementById('requestsView').style.display = v === 'requests' ? 'block' : 'none';
+    document.getElementById('phonebankView').style.display = v === 'phonebank' ? 'block' : 'none';
+    if(v === 'phonebank') renderPhoneBank();
+  }
+
+  function getUniquePhones(){
+    const map = new Map();
+    allBookings.forEach(b => {
+      if(!b.phone) return;
+      if(!map.has(b.phone)){
+        map.set(b.phone, { name: b.fullname || '-', phone: b.phone, count: 1 });
+      } else {
+        map.get(b.phone).count++;
+      }
+    });
+    return Array.from(map.values());
+  }
+
+  function renderPhoneBank(){
+    const phones = getUniquePhones();
+    document.getElementById('phoneCountBox').textContent = `${phones.length} شماره یکتا`;
+    const list = document.getElementById('phoneList');
+    if(phones.length === 0){
+      list.innerHTML = "<div class='empty'>هنوز شماره‌ای ثبت نشده</div>";
+      return;
+    }
+    list.innerHTML = phones.map(p => `
+      <div class="glass phone-row">
+        <div>
+          <div class="pname">${p.name}</div>
+          <div class="pcount">${p.count} درخواست</div>
+        </div>
+        <div class="pnum"><a href="tel:${p.phone}">${p.phone}</a></div>
+      </div>
+    `).join('');
+  }
+
+  function downloadPhoneCSV(){
+    const phones = getUniquePhones();
+    let csv = "\uFEFFنام,شماره تماس,تعداد درخواست\n";
+    phones.forEach(p => {
+      csv += `"${p.name}","${p.phone}",${p.count}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'بانک-شماره-الو-کاغذ.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   async function fetchBookings(){
@@ -159,6 +237,9 @@
     }
     allBookings = data;
     render();
+    if(document.getElementById('phonebankView').style.display !== 'none'){
+      renderPhoneBank();
+    }
   }
 
   function loadBookings(){
